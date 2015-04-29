@@ -6,6 +6,28 @@ import numpy as np
 from sklearn import ensemble, feature_extraction, preprocessing, metrics, cross_validation
 import xgboost as xgb
 
+# fit all the models
+def fit(models, X, y):
+    for m in models:
+        m.fit(X, y)
+
+# predict
+def predict(models, X, weights=None):
+    n_classes = 9
+    n_models = len(models)
+
+    preds = np.zeros((len(X), n_classes))
+
+    if weights == None:
+        weights = np.zeros(n_models)
+        weights.fill(1.0/n_models)    
+
+    for m, weight in zip(models, weights):
+        pred = m.predict_proba(X)
+        preds = np.add(preds, np.multiply(pred, weight))    
+
+    return preds
+
 def parse_arg(sys):
     config = {}
     for arg in sys.argv:
@@ -44,8 +66,10 @@ labels = np.array(labels)
 print 'shapes train/test/labels = %s / %s / %s' % (train.shape, test.shape, labels.shape)
 
 # models
-#clf = ensemble.RandomForestClassifier(n_estimators=200, n_jobs=-1, verbose=0)
-clf = xgb.XGBClassifier(n_estimators=300, learning_rate=0.1, max_depth=9, subsample=0.9, objective='multi:softprob')
+models = [
+    xgb.XGBClassifier(n_estimators=10, learning_rate=0.1, max_depth=9, subsample=0.9, objective='multi:softprob'),
+    xgb.XGBClassifier(n_estimators=20, learning_rate=0.1, max_depth=9, subsample=0.9, objective='multi:softprob'),
+]
 
 if 'CV' in config:
     print 'cross validating...'
@@ -55,13 +79,13 @@ if 'CV' in config:
     scores = []
     for train_index, test_index in kf:
         X_train, X_test = train[train_index], train[test_index]
-        y_train, y_test = labels[train_index], labels[test_index]    
+        y_train, y_test = labels[train_index], labels[test_index]
         print '  - training...'
-        clf.fit(X_train, y_train)
+        fit(models, X_train, y_train)
         print '  - preciting...'
-        preds = clf.predict_proba(X_train)
+        preds = predict(models, X_train)
         train_loss = metrics.log_loss(y_train, preds)
-	preds = clf.predict_proba(X_test)
+        preds = predict(models, X_test)
         test_loss = metrics.log_loss(y_test, preds)
         scores.append(test_loss)
         print "  - loss : train/test = %s / %s" % (train_loss, test_loss)
@@ -70,11 +94,14 @@ if 'CV' in config:
 
 if 'Test' in config:
     print 'training...'
-    clf.fit(train, labels)
+    fit(models, train, labels)
+    preds = predict(models, train)
+    train_loss = metrics.log_loss(labels, preds)
+    print 'train loss on entire dataset = %s' % train_loss
 
     print 'classification...'
     # predict on test set
-    preds = clf.predict_proba(test)
+    preds = predict(models, test)
 
     print 'writing...'
     # create submission file
