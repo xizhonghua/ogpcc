@@ -45,12 +45,12 @@ print 'shapes train/test/labels = %s / %s / %s' % (train.shape, test.shape, labe
 
 # models
 #clf = ensemble.RandomForestClassifier(n_estimators=200, n_jobs=-1, verbose=0)
-clf = xgb.XGBClassifier(n_estimators=1000, learning_rate=0.01, max_depth=6, objective='multi:softprob')
+clf = xgb.XGBClassifier(n_estimators=3000, learning_rate=0.01, max_depth=9, subsample=0.9, objective='multi:softprob')
 
 if 'CV' in config:
     print 'cross validating...'
 
-    kf = cross_validation.KFold(n=len(train), n_folds=5, shuffle=True)        
+    kf = cross_validation.KFold(n=len(train), n_folds=3, shuffle=True)        
 
     scores = []
     for train_index, test_index in kf:
@@ -59,10 +59,12 @@ if 'CV' in config:
         print '  - training...'
         clf.fit(X_train, y_train)
         print '  - preciting...'
-        preds = clf.predict_proba(X_test)
-        logloss = metrics.log_loss(y_test, preds)
-        scores.append(logloss)
-        print "  - logloss = %s" % logloss
+        preds = clf.predict_proba(X_train)
+        train_loss = metrics.log_loss(y_train, preds)
+	preds = clf.predict_proba(X_test)
+        test_loss = metrics.log_loss(y_test, preds)
+        scores.append(test_loss)
+        print "  - loss : train/test = %s / %s" % (train_loss, test_loss)
 
     print 'avg logloss = %s' % np.mean(np.array(scores))
 
