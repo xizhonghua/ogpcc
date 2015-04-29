@@ -67,9 +67,9 @@ print 'shapes train/test/labels = %s / %s / %s' % (train.shape, test.shape, labe
 
 # models
 models = [
-    xgb.XGBClassifier(n_estimators=3000, learning_rate=0.010, max_depth=9, subsample=0.9, seed=1, objective='multi:softprob'),
-    xgb.XGBClassifier(n_estimators=3000, learning_rate=0.010, max_depth=9, subsample=0.9, seed=3, objective='multi:softprob'),
-    xgb.XGBClassifier(n_estimators=3000, learning_rate=0.010, max_depth=9, subsample=0.9, seed=7, objective='multi:softprob'),
+    xgb.XGBClassifier(n_estimators=3000, learning_rate=0.010, max_depth=9, subsample=0.9, seed=1, objective='multi:softprob', min_child_weight=1.0),
+    xgb.XGBClassifier(n_estimators=3000, learning_rate=0.010, max_depth=9, subsample=0.9, seed=3, objective='multi:softprob', min_child_weight=10.0),
+    xgb.XGBClassifier(n_estimators=3000, learning_rate=0.010, max_depth=9, subsample=0.9, seed=7, objective='multi:softprob', min_child_weight=100.0),
 ]
 
 if 'CV' in config:
