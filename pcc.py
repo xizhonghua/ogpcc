@@ -45,7 +45,7 @@ print 'shapes train/test/labels = %s / %s / %s' % (train.shape, test.shape, labe
 
 # models
 #clf = ensemble.RandomForestClassifier(n_estimators=200, n_jobs=-1, verbose=0)
-clf = xgb.XGBClassifier(n_estimators=3000, learning_rate=0.01, max_depth=9, subsample=0.9, objective='multi:softprob')
+clf = xgb.XGBClassifier(n_estimators=300, learning_rate=0.1, max_depth=9, subsample=0.9, objective='multi:softprob')
 
 if 'CV' in config:
     print 'cross validating...'
